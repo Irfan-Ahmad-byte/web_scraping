@@ -1,8 +1,3 @@
-import csv
-import requests
-
-import csv
-import requests
 
 import csv
 import requests
