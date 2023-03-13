@@ -2,6 +2,8 @@ import csv
 import random
 import time
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+
 
 def get_working_ip(proxies):
     """
@@ -14,7 +16,7 @@ def get_working_ip(proxies):
         str: The IP address of a working proxy.
     """
     num_attempts = 0
-    while num_attempts < 7:
+    while num_attempts < 4:
         proxy = random.choice(proxies)
         if test_ip(proxy):
             print(f"Using IP address: {proxy}")
@@ -38,14 +40,14 @@ def test_ip(ip_address):
         options = webdriver.ChromeOptions()
         proxy = f"{ip_address}"
         options.add_argument(f"--proxy-server={proxy}")
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Remote(command_executor='http://localhost:4444', options=options)
         driver.get('https://www.whatismyip.com/')
         time.sleep(5)
-        ip = driver.find_element_by_xpath('//span[@class="green"]/strong').text
+        ip = driver.find_element(By.ID, "ipv4").text
         driver.quit()
         return ip
-    except:
-        return None
+    except Exception as e:
+        raise e
 
 def main():
     # Read the proxies from the CSV file
@@ -55,26 +57,17 @@ def main():
     
     # Get a working IP address
     ip_address = get_working_ip(proxies)
+
     if ip_address is None:
-        print("All IP addresses are blocked. Aborting...")
-        return
-
-    # Set up the browser with the proxy
-    options = webdriver.ChromeOptions()
-    proxy = f"{ip_address}"
-    options.add_argument(f"--proxy-server={proxy}")
-    driver = webdriver.Chrome(options=options)
-
-    # Visit Fiverr and get the current IP
-    driver.get('https://www.fiverr.com/')
-    current_ip = test_ip(ip_address)
-    if current_ip is None:
         print("Could not get current IP address. Aborting...")
     else:
-        print(f"Current IP address: {current_ip}")
+        print(f"Current IP address returned by whatismyip.com: {ip_address}")
 
     # Close the browser
-    driver.quit()
+    try:
+    	driver.quit()
+    except:
+    	...
 
 if __name__ == '__main__':
     main()
